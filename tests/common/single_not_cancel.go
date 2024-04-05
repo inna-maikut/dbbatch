@@ -21,7 +21,6 @@ func SingleNotCancel(ctx context.Context, t *testing.T, db *dbbatch.BatchDB) {
 	const (
 		nameFirst        = "first"
 		nameSecond       = "second"
-		nameThird        = "third"
 		userID     int64 = 100100
 	)
 

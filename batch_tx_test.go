@@ -22,7 +22,10 @@ func TestBatchTx_withDoneConn(t *testing.T) {
 	})
 
 	t.Run("QueryContext", func(t *testing.T) {
-		_, err := btx.QueryContext(ctx, "")
+		rows, err := btx.QueryContext(ctx, "")
+		if rows != nil {
+			defer rows.Close()
+		}
 		assert.ErrorIs(t, err, sql.ErrConnDone)
 	})
 
@@ -34,24 +37,30 @@ func TestBatchTx_withDoneConn(t *testing.T) {
 	// QueryRowContext, QueryRow, QueryRowxContext, QueryRowx will return err from inner conn
 
 	t.Run("QueryxContext", func(t *testing.T) {
-		_, err := btx.QueryxContext(ctx, "")
+		rows, err := btx.QueryxContext(ctx, "")
+		if rows != nil {
+			defer rows.Close()
+		}
 		assert.ErrorIs(t, err, sql.ErrConnDone)
 	})
 
 	t.Run("GetContext", func(t *testing.T) {
-		var val interface{}
+		var val any
 		err := btx.GetContext(ctx, val, "")
 		assert.ErrorIs(t, err, sql.ErrConnDone)
 	})
 
 	t.Run("SelectContext", func(t *testing.T) {
-		var val interface{}
+		var val any
 		err := btx.SelectContext(ctx, val, "")
 		assert.ErrorIs(t, err, sql.ErrConnDone)
 	})
 
 	t.Run("NamedQueryContext", func(t *testing.T) {
-		_, err := btx.NamedQueryContext(ctx, "", struct{}{})
+		rows, err := btx.NamedQueryContext(ctx, "", struct{}{})
+		if rows != nil {
+			defer rows.Close()
+		}
 		assert.ErrorIs(t, err, sql.ErrConnDone)
 	})
 
@@ -83,12 +92,18 @@ func TestBatchTx_DoneState(t *testing.T) {
 	})
 
 	t.Run("QueryContext", func(t *testing.T) {
-		_, err := btx.QueryContext(ctx, "")
+		rows, err := btx.QueryContext(ctx, "")
+		if rows != nil {
+			defer rows.Close()
+		}
 		assert.ErrorIs(t, err, sql.ErrTxDone)
 	})
 
 	t.Run("Query", func(t *testing.T) {
-		_, err := btx.Query("")
+		rows, err := btx.Query("")
+		if rows != nil {
+			defer rows.Close()
+		}
 		assert.ErrorIs(t, err, sql.ErrTxDone)
 	})
 
@@ -105,46 +120,58 @@ func TestBatchTx_DoneState(t *testing.T) {
 	// QueryRowContext, QueryRow, QueryRowxContext, QueryRowx will return err from inner conn
 
 	t.Run("QueryxContext", func(t *testing.T) {
-		_, err := btx.QueryxContext(ctx, "")
+		rows, err := btx.QueryxContext(ctx, "")
+		if rows != nil {
+			defer rows.Close()
+		}
 		assert.ErrorIs(t, err, sql.ErrTxDone)
 	})
 
 	t.Run("Queryx", func(t *testing.T) {
-		_, err := btx.Queryx("")
+		rows, err := btx.Queryx("")
+		if rows != nil {
+			defer rows.Close()
+		}
 		assert.ErrorIs(t, err, sql.ErrTxDone)
 	})
 
 	t.Run("GetContext", func(t *testing.T) {
-		var val interface{}
+		var val any
 		err := btx.GetContext(ctx, val, "")
 		assert.ErrorIs(t, err, sql.ErrTxDone)
 	})
 
 	t.Run("Get", func(t *testing.T) {
-		var val interface{}
+		var val any
 		err := btx.Get(val, "")
 		assert.ErrorIs(t, err, sql.ErrTxDone)
 	})
 
 	t.Run("SelectContext", func(t *testing.T) {
-		var val interface{}
+		var val any
 		err := btx.SelectContext(ctx, val, "")
 		assert.ErrorIs(t, err, sql.ErrTxDone)
 	})
 
 	t.Run("Select", func(t *testing.T) {
-		var val interface{}
+		var val any
 		err := btx.Select(val, "")
 		assert.ErrorIs(t, err, sql.ErrTxDone)
 	})
 
 	t.Run("NamedQueryContext", func(t *testing.T) {
-		_, err := btx.NamedQueryContext(ctx, "", struct{}{})
+		rows, err := btx.NamedQueryContext(ctx, "", struct{}{})
+		if rows != nil {
+			defer rows.Close()
+		}
 		assert.ErrorIs(t, err, sql.ErrTxDone)
 	})
 
 	t.Run("NamedQuery", func(t *testing.T) {
-		_, err := btx.NamedQuery("", struct{}{})
+		rows, err := btx.NamedQuery("", struct{}{})
+		if rows != nil {
+			defer rows.Close()
+		}
 		assert.ErrorIs(t, err, sql.ErrTxDone)
 	})
 

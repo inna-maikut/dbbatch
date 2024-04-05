@@ -20,3 +20,11 @@ docker-up:
 .PHONY: docker-down
 docker-down:
 	@docker rm -f dbbatch_postgres_12
+
+.PHONY: lint
+lint:
+	@golangci-lint run
+
+.PHONY: fix
+fix:
+	@golangci-lint run --fix

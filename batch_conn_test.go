@@ -126,6 +126,7 @@ func TestBatchConn_QueryRowxContext(t *testing.T) {
 	assert.Same(t, wantRow, row)
 }
 
+//nolint:sqlclosecheck
 func TestBatchConn_DoneState(t *testing.T) {
 	ctx := context.Background()
 
@@ -185,25 +186,25 @@ func TestBatchConn_DoneState(t *testing.T) {
 	})
 
 	t.Run("GetContext", func(t *testing.T) {
-		var val interface{}
+		var val any
 		err := bc.GetContext(ctx, val, "")
 		assert.ErrorIs(t, err, sql.ErrConnDone)
 	})
 
 	t.Run("Get", func(t *testing.T) {
-		var val interface{}
+		var val any
 		err := bc.Get(val, "")
 		assert.ErrorIs(t, err, sql.ErrConnDone)
 	})
 
 	t.Run("SelectContext", func(t *testing.T) {
-		var val interface{}
+		var val any
 		err := bc.SelectContext(ctx, val, "")
 		assert.ErrorIs(t, err, sql.ErrConnDone)
 	})
 
 	t.Run("Select", func(t *testing.T) {
-		var val interface{}
+		var val any
 		err := bc.Select(val, "")
 		assert.ErrorIs(t, err, sql.ErrConnDone)
 	})

@@ -1,6 +1,6 @@
 module github.com/inna-maikut/dbbatch
 
-go 1.18.0
+go 1.20
 
 require (
 	github.com/jackc/pgtype v1.14.0

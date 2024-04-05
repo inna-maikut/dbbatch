@@ -19,8 +19,8 @@ func TestBatchRunner_OneStep(t *testing.T) {
 	result1 := struct{ name string }{name: "result 1"}
 
 	batchSenderMock.EXPECT().SendBatchRequests(gomock.Any(), []Request{
-		{Query: "first", Args: []interface{}{1, 2}},
-		{Query: "second", Args: []interface{}{3, 4}},
+		{Query: "first", Args: []any{1, 2}},
+		{Query: "second", Args: []any{3, 4}},
 	}).Return(result1, func() error {
 		return nil
 	}, nil)
@@ -33,12 +33,12 @@ func TestBatchRunner_OneStep(t *testing.T) {
 	b.Add(func(ctx context.Context) error {
 		a += 1
 
-		res := br.Queue(Request{Query: "first", Args: []interface{}{1, 2}})
+		res := br.Queue(Request{Query: "first", Args: []any{1, 2}})
 		assert.Nil(t, res)
 
 		br.roundTrip()
 
-		res = br.Queue(Request{Query: "first", Args: []interface{}{1, 2}})
+		res = br.Queue(Request{Query: "first", Args: []any{1, 2}})
 		assert.Equal(t, result1, res)
 
 		return nil
@@ -46,12 +46,12 @@ func TestBatchRunner_OneStep(t *testing.T) {
 	b.Add(func(ctx context.Context) error {
 		a += 100
 
-		res := br.Queue(Request{Query: "second", Args: []interface{}{3, 4}})
+		res := br.Queue(Request{Query: "second", Args: []any{3, 4}})
 		assert.Nil(t, res)
 
 		br.roundTrip()
 
-		res = br.Queue(Request{Query: "second", Args: []interface{}{3, 4}})
+		res = br.Queue(Request{Query: "second", Args: []any{3, 4}})
 		assert.Equal(t, result1, res)
 
 		return nil
@@ -72,9 +72,9 @@ func TestBatchRunner_MultiStep(t *testing.T) {
 	result1 := struct{ name string }{name: "result 1"}
 	result2 := struct{ name string }{name: "result 2"}
 
-	request1 := Request{Query: "first", Args: []interface{}{1, 2}}
-	request2 := Request{Query: "second", Args: []interface{}{3, 4}}
-	request3 := Request{Query: "third", Args: []interface{}{5, 6}}
+	request1 := Request{Query: "first", Args: []any{1, 2}}
+	request2 := Request{Query: "second", Args: []any{3, 4}}
+	request3 := Request{Query: "third", Args: []any{5, 6}}
 
 	batchSenderMock.EXPECT().SendBatchRequests(gomock.Any(), []Request{
 		request1,
@@ -143,9 +143,9 @@ func TestBatchRunner_Error(t *testing.T) {
 	result1 := struct{ name string }{name: "result 1"}
 	result2 := struct{ name string }{name: "result 2"}
 
-	request1 := Request{Query: "first", Args: []interface{}{1, 2}}
-	request2 := Request{Query: "second", Args: []interface{}{3, 4}}
-	request3 := Request{Query: "third", Args: []interface{}{5, 6}}
+	request1 := Request{Query: "first", Args: []any{1, 2}}
+	request2 := Request{Query: "second", Args: []any{3, 4}}
+	request3 := Request{Query: "third", Args: []any{5, 6}}
 
 	batchSenderMock.EXPECT().SendBatchRequests(gomock.Any(), []Request{
 		request1,
@@ -211,7 +211,7 @@ func TestBatchRunner_SendBatchErr(t *testing.T) {
 
 	batchSenderMock := NewMockBatchRequestsSender(ctrl)
 
-	request1 := Request{Query: "first", Args: []interface{}{1, 2}}
+	request1 := Request{Query: "first", Args: []any{1, 2}}
 
 	batchSenderMock.EXPECT().SendBatchRequests(gomock.Any(), []Request{
 		request1,
@@ -233,6 +233,7 @@ func TestBatchRunner_SendBatchErr(t *testing.T) {
 		br.roundTrip()
 
 		res = br.Queue(request1)
+		assert.NotNil(t, res)
 
 		return nil
 	})
@@ -250,7 +251,7 @@ func TestBatchRunner_CloseBatchResultsErr(t *testing.T) {
 	batchSenderMock := NewMockBatchRequestsSender(ctrl)
 
 	result1 := struct{ name string }{name: "result 1"}
-	request1 := Request{Query: "first", Args: []interface{}{1, 2}}
+	request1 := Request{Query: "first", Args: []any{1, 2}}
 
 	batchSenderMock.EXPECT().SendBatchRequests(gomock.Any(), []Request{
 		request1,
@@ -272,6 +273,7 @@ func TestBatchRunner_CloseBatchResultsErr(t *testing.T) {
 		br.roundTrip()
 
 		res = br.Queue(request1)
+		assert.NotNil(t, res)
 
 		return nil
 	})

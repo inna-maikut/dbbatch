@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+//nolint:sqlclosecheck
 func TestBatchDB_withDoneConn(t *testing.T) {
 	bc := &BatchConn{}
 	bc.done = true
@@ -44,13 +45,13 @@ func TestBatchDB_withDoneConn(t *testing.T) {
 	})
 
 	t.Run("GetContext", func(t *testing.T) {
-		var val interface{}
+		var val any
 		err := bdb.GetContext(ctx, val, "")
 		assert.ErrorIs(t, err, sql.ErrConnDone)
 	})
 
 	t.Run("SelectContext", func(t *testing.T) {
-		var val interface{}
+		var val any
 		err := bdb.SelectContext(ctx, val, "")
 		assert.ErrorIs(t, err, sql.ErrConnDone)
 	})

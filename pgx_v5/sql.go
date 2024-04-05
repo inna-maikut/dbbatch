@@ -16,10 +16,12 @@ import (
 
 var batchPgxDriver *Driver
 
-var _ driver.DriverContext = &Driver{}
-var _ driver.Driver = &Driver{}
-var _ dbbatch.BatchRequestsSender = &Conn{}
-var _ driver.Conn = &Conn{}
+var (
+	_ driver.DriverContext        = &Driver{}
+	_ driver.Driver               = &Driver{}
+	_ dbbatch.BatchRequestsSender = &Conn{}
+	_ driver.Conn                 = &Conn{}
+)
 
 func init() {
 	batchPgxDriver = &Driver{}
@@ -91,11 +93,9 @@ func (dc *driverConnector) Driver() driver.Driver {
 type Conn struct {
 	base driver.Conn
 	conn *pgx.Conn
-
-	psCount int64 // Counter used for creating unique prepared statement names
 }
 
-func (c *Conn) SendBatchRequests(ctx context.Context, requests []dbbatch.Request) (res interface{}, close func() error, err error) {
+func (c *Conn) SendBatchRequests(ctx context.Context, requests []dbbatch.Request) (res any, close func() error, err error) {
 	b := pgx.Batch{}
 	for _, request := range requests {
 		b.Queue(request.Query, request.Args...)
@@ -141,7 +141,7 @@ func (c *Conn) BeginTx(ctx context.Context, opts driver.TxOptions) (driver.Tx, e
 	}); ok {
 		return ext.BeginTx(ctx, opts)
 	}
-	return c.base.Begin()
+	return c.base.Begin() //nolint:staticcheck
 }
 
 func (c *Conn) ExecContext(ctx context.Context, query string, argsV []driver.NamedValue) (driver.Result, error) {
@@ -158,7 +158,7 @@ func (c *Conn) ExecContext(ctx context.Context, query string, argsV []driver.Nam
 		}
 
 		args := namedValueToDriverValue(argsV)
-		return stmt.Exec(args)
+		return stmt.Exec(args) //nolint:staticcheck
 	}
 
 	if c.conn.IsClosed() {
@@ -197,14 +197,14 @@ func (c *Conn) QueryContext(ctx context.Context, query string, argsV []driver.Na
 		}
 
 		args := namedValueToDriverValue(argsV)
-		return stmt.Query(args)
+		return stmt.Query(args) //nolint:staticcheck
 	}
 
 	if c.conn.IsClosed() {
 		return nil, driver.ErrBadConn
 	}
 
-	args := make([]interface{}, 0, len(argsV))
+	args := make([]any, 0, len(argsV))
 	args = append(args, namedValueToInterface(argsV)...)
 
 	res := bc.BatchRunner().Queue(dbbatch.Request{
@@ -243,7 +243,7 @@ func (c *Conn) CheckNamedValue(*driver.NamedValue) error {
 	return nil
 }
 
-func (c *Conn) ResetSession(ctx context.Context) error {
+func (c *Conn) ResetSession(_ context.Context) error {
 	if c.conn.IsClosed() {
 		return driver.ErrBadConn
 	}
@@ -253,11 +253,11 @@ func (c *Conn) ResetSession(ctx context.Context) error {
 
 type rowValueFunc func(src []byte) (driver.Value, error)
 
-func namedValueToInterface(argsV []driver.NamedValue) []interface{} {
-	args := make([]interface{}, 0, len(argsV))
+func namedValueToInterface(argsV []driver.NamedValue) []any {
+	args := make([]any, 0, len(argsV))
 	for _, v := range argsV {
 		if v.Value != nil {
-			args = append(args, v.Value.(interface{}))
+			args = append(args, v.Value.(any))
 		} else {
 			args = append(args, nil)
 		}
@@ -269,7 +269,7 @@ func namedValueToDriverValue(argsV []driver.NamedValue) []driver.Value {
 	args := make([]driver.Value, 0, len(argsV))
 	for _, v := range argsV {
 		if v.Value != nil {
-			args = append(args, v.Value.(interface{}))
+			args = append(args, v.Value.(any))
 		} else {
 			args = append(args, nil)
 		}

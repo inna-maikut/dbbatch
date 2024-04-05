@@ -12,7 +12,7 @@ const maxAllowedIterations = 10_000_000
 type batchItem struct {
 	i           int
 	cb          CallbackFn
-	batchResult interface{}
+	batchResult any
 	roundTrip   chan struct{}
 	result      chan error
 	isWaiting   bool
@@ -20,7 +20,7 @@ type batchItem struct {
 }
 type Request struct {
 	Query string
-	Args  []interface{}
+	Args  []any
 }
 
 type batchRunner struct {
@@ -74,7 +74,7 @@ func (br *batchRunner) run(ctx context.Context, b *Batch) (err error) {
 
 	// do batches while all goroutines not done
 	var (
-		res          interface{}
+		res          any
 		closeFn      func() error
 		sendBatchErr error
 		iteration    = 0
@@ -132,7 +132,7 @@ func (br *batchRunner) waitForCurrentItemFinishedOrLocked() (err error) {
 }
 
 // Queue Only for using in the driver implementation code!
-func (br *batchRunner) Queue(request Request) interface{} {
+func (br *batchRunner) Queue(request Request) any {
 	if !br.currentItem.isWaiting {
 		br.currentItem.isWaiting = true
 		br.requests = append(br.requests, request)

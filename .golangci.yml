@@ -1,0 +1,51 @@
+linters:
+  enable:
+    - revive
+    - typecheck
+    - goconst
+    - gosec
+    - goimports
+    - megacheck
+    - unconvert
+    - goconst
+    - gocyclo
+    - gocognit
+    - gofmt
+    - prealloc
+    - sqlclosecheck
+    - gofumpt
+
+linters-settings:
+  govet:
+    enable-all: true # includes rule nilness
+    disable:
+      - fieldalignment
+  revive:
+    rules:
+      - name: var-naming
+        severity: warning
+        disabled: false
+  goimports:
+    local-prefixes: github.com/inna-maikut/dbbatch
+  gofmt:
+    rewrite-rules:
+      - pattern: 'interface{}'
+        replacement: 'any'
+  gofumpt:
+    extra-rules: true
+
+issues:
+  exclude-rules:
+    - linters:
+        - revive
+      text: "use an underscore in package name"
+    - path: ".+/sql_copypaste\\.go"
+      linters:
+        - gocognit
+        - gocyclo
+      text: "complexity"
+
+output:
+  format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true

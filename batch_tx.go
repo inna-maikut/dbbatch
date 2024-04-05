@@ -8,10 +8,9 @@ import (
 )
 
 type BatchTx struct {
-	bc      *BatchConn
-	tx      *sqlx.Tx
-	done    bool
-	closeFn func() error
+	bc   *BatchConn
+	tx   *sqlx.Tx
+	done bool
 }
 
 func newBatchTx(bc *BatchConn, tx *sqlx.Tx) *BatchTx {
@@ -110,64 +109,64 @@ func (btx *BatchTx) QueryRowx(query string, args ...any) *sqlx.Row {
 	return btx.bc.QueryRowx(query, args...)
 }
 
-func (btx *BatchTx) MustExecContext(ctx context.Context, query string, args ...interface{}) sql.Result {
+func (btx *BatchTx) MustExecContext(ctx context.Context, query string, args ...any) sql.Result {
 	return btx.bc.MustExecContext(ctx, query, args...)
 }
 
-func (btx *BatchTx) MustExec(query string, args ...interface{}) sql.Result {
+func (btx *BatchTx) MustExec(query string, args ...any) sql.Result {
 	return btx.bc.MustExec(query, args...)
 }
 
-func (btx *BatchTx) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
+func (btx *BatchTx) GetContext(ctx context.Context, dest any, query string, args ...any) error {
 	if btx.done {
 		return sql.ErrTxDone
 	}
 	return btx.bc.GetContext(ctx, dest, query, args...)
 }
 
-func (btx *BatchTx) Get(dest interface{}, query string, args ...interface{}) error {
+func (btx *BatchTx) Get(dest any, query string, args ...any) error {
 	if btx.done {
 		return sql.ErrTxDone
 	}
 	return btx.bc.Get(dest, query, args...)
 }
 
-func (btx *BatchTx) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
+func (btx *BatchTx) SelectContext(ctx context.Context, dest any, query string, args ...any) error {
 	if btx.done {
 		return sql.ErrTxDone
 	}
 	return btx.bc.SelectContext(ctx, dest, query, args...)
 }
 
-func (btx *BatchTx) Select(dest interface{}, query string, args ...interface{}) error {
+func (btx *BatchTx) Select(dest any, query string, args ...any) error {
 	if btx.done {
 		return sql.ErrTxDone
 	}
 	return btx.bc.Select(dest, query, args...)
 }
 
-func (btx *BatchTx) NamedQueryContext(ctx context.Context, query string, arg interface{}) (*sqlx.Rows, error) {
+func (btx *BatchTx) NamedQueryContext(ctx context.Context, query string, arg any) (*sqlx.Rows, error) {
 	if btx.done {
 		return nil, sql.ErrTxDone
 	}
 	return btx.bc.NamedQueryContext(ctx, query, arg)
 }
 
-func (btx *BatchTx) NamedQuery(query string, arg interface{}) (*sqlx.Rows, error) {
+func (btx *BatchTx) NamedQuery(query string, arg any) (*sqlx.Rows, error) {
 	if btx.done {
 		return nil, sql.ErrTxDone
 	}
 	return btx.bc.NamedQuery(query, arg)
 }
 
-func (btx *BatchTx) NamedExecContext(ctx context.Context, query string, arg interface{}) (sql.Result, error) {
+func (btx *BatchTx) NamedExecContext(ctx context.Context, query string, arg any) (sql.Result, error) {
 	if btx.done {
 		return nil, sql.ErrTxDone
 	}
 	return btx.bc.NamedExecContext(ctx, query, arg)
 }
 
-func (btx *BatchTx) NamedExec(query string, arg interface{}) (sql.Result, error) {
+func (btx *BatchTx) NamedExec(query string, arg any) (sql.Result, error) {
 	if btx.done {
 		return nil, sql.ErrTxDone
 	}

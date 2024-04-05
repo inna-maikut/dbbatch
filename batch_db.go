@@ -9,11 +9,13 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-var ErrTxNotSupported = errors.New("transaction is not supported in batch, use BeginBatchTx method")
-var ErrNestedTxNotSupported = errors.New("nested transactions are not supported")
-var ErrStmtNotSupported = errors.New("prepared statements are not supported in batch, simple queries")
-var ErrNoRunningBatch = errors.New("connection has no running batch")
-var ErrHasRunningBatch = errors.New("connection has running batch")
+var (
+	ErrTxNotSupported       = errors.New("transaction is not supported in batch, use BeginBatchTx method")
+	ErrNestedTxNotSupported = errors.New("nested transactions are not supported")
+	ErrStmtNotSupported     = errors.New("prepared statements are not supported in batch, simple queries")
+	ErrNoRunningBatch       = errors.New("connection has no running batch")
+	ErrHasRunningBatch      = errors.New("connection has running batch")
+)
 
 type BatchDB struct {
 	*sqlx.DB
@@ -144,7 +146,7 @@ func (bdb *BatchDB) QueryRowxContext(ctx context.Context, query string, args ...
 	return bdb.DB.QueryRowxContext(bdb.maybeWithoutCancel(ctx), query, args...)
 }
 
-func (bdb *BatchDB) MustExecContext(ctx context.Context, query string, args ...interface{}) sql.Result {
+func (bdb *BatchDB) MustExecContext(ctx context.Context, query string, args ...any) sql.Result {
 	if bc := BatchConnFromContext(ctx); bc != nil {
 		return bc.MustExecContext(ctx, query, args...)
 	}
@@ -163,7 +165,7 @@ func (bdb *BatchDB) MustExecContext(ctx context.Context, query string, args ...i
 	return bdb.DB.MustExecContext(ctx, query, args...)
 }
 
-func (bdb *BatchDB) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
+func (bdb *BatchDB) GetContext(ctx context.Context, dest any, query string, args ...any) error {
 	if bc := BatchConnFromContext(ctx); bc != nil {
 		return bc.GetContext(ctx, dest, query, args...)
 	}
@@ -182,7 +184,7 @@ func (bdb *BatchDB) GetContext(ctx context.Context, dest interface{}, query stri
 	return bdb.DB.GetContext(ctx, dest, query, args...)
 }
 
-func (bdb *BatchDB) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
+func (bdb *BatchDB) SelectContext(ctx context.Context, dest any, query string, args ...any) error {
 	if bc := BatchConnFromContext(ctx); bc != nil {
 		return bc.SelectContext(ctx, dest, query, args...)
 	}
@@ -201,7 +203,7 @@ func (bdb *BatchDB) SelectContext(ctx context.Context, dest interface{}, query s
 	return bdb.DB.SelectContext(ctx, dest, query, args...)
 }
 
-func (bdb *BatchDB) NamedQueryContext(ctx context.Context, query string, arg interface{}) (*sqlx.Rows, error) {
+func (bdb *BatchDB) NamedQueryContext(ctx context.Context, query string, arg any) (*sqlx.Rows, error) {
 	if bc := BatchConnFromContext(ctx); bc != nil {
 		return bc.NamedQueryContext(ctx, query, arg)
 	}
@@ -209,7 +211,7 @@ func (bdb *BatchDB) NamedQueryContext(ctx context.Context, query string, arg int
 	return bdb.DB.NamedQueryContext(bdb.maybeWithoutCancel(ctx), query, arg)
 }
 
-func (bdb *BatchDB) NamedExecContext(ctx context.Context, query string, arg interface{}) (sql.Result, error) {
+func (bdb *BatchDB) NamedExecContext(ctx context.Context, query string, arg any) (sql.Result, error) {
 	if bc := BatchConnFromContext(ctx); bc != nil {
 		return bc.NamedExecContext(ctx, query, arg)
 	}

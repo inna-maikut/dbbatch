@@ -14,12 +14,14 @@ type BatchConn struct {
 	conn      *sqlx.Conn
 	tx        *sqlx.Tx
 	br        batchRunnerMachine
-	bindNamed func(query string, arg interface{}) (string, []interface{}, error)
+	bindNamed func(query string, arg any) (string, []any, error)
 	done      bool
 }
 
-var _ Ext = &sqlx.Conn{}
-var _ Ext = &sqlx.Tx{}
+var (
+	_ Ext = &sqlx.Conn{}
+	_ Ext = &sqlx.Tx{}
+)
 
 // newBatchConn creates *BatchConn. Must call BatchConn.Close() in the end if err is nil
 func newBatchConn(db *BatchDB, conn *sqlx.Conn) *BatchConn {
@@ -49,11 +51,11 @@ func (bc *BatchConn) maybeWithoutCancel(ctx context.Context) context.Context {
 }
 
 // SendBatchRequests returns batch result of concrete type. Must close it in the end
-func (bc *BatchConn) SendBatchRequests(ctx context.Context, requests []Request) (res interface{}, closeFn func() error, err error) {
+func (bc *BatchConn) SendBatchRequests(ctx context.Context, requests []Request) (res any, closeFn func() error, err error) {
 	if bc.done {
 		return nil, nil, sql.ErrConnDone
 	}
-	err = bc.conn.Raw(func(driverConn interface{}) error {
+	err = bc.conn.Raw(func(driverConn any) error {
 		val, ok := driverConn.(BaseConnProvider)
 		if !ok {
 			return nil
@@ -141,6 +143,7 @@ func (bc *BatchConn) SendBatch(ctx context.Context, b *Batch) (err error) {
 	return err
 }
 
+// nolint:sqlclosecheck
 func (bc *BatchConn) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	if bc.done {
 		return nil, sql.ErrConnDone
@@ -150,7 +153,10 @@ func (bc *BatchConn) QueryContext(ctx context.Context, query string, args ...any
 	}
 	ctx = bc.setInCtx(ctx)
 
-	_, _ = bc.ext.QueryContext(ctx, query, args...)
+	rows, _ := bc.ext.QueryContext(ctx, query, args...)
+	if rows != nil {
+		defer rows.Close()
+	}
 
 	bc.br.roundTrip()
 
@@ -207,7 +213,10 @@ func (bc *BatchConn) QueryxContext(ctx context.Context, query string, args ...an
 	}
 	ctx = bc.setInCtx(ctx)
 
-	_, _ = bc.ext.QueryxContext(ctx, query, args...)
+	rows, _ := bc.ext.QueryxContext(ctx, query, args...)
+	if rows != nil {
+		defer rows.Close()
+	}
 
 	bc.br.roundTrip()
 
@@ -235,43 +244,43 @@ func (bc *BatchConn) QueryRowx(query string, args ...any) *sqlx.Row {
 	return bc.QueryRowxContext(context.Background(), query, args...)
 }
 
-func (bc *BatchConn) MustExecContext(ctx context.Context, query string, args ...interface{}) sql.Result {
+func (bc *BatchConn) MustExecContext(ctx context.Context, query string, args ...any) sql.Result {
 	return sqlx.MustExecContext(ctx, bc, query, args...)
 }
 
-func (bc *BatchConn) MustExec(query string, args ...interface{}) sql.Result {
+func (bc *BatchConn) MustExec(query string, args ...any) sql.Result {
 	return bc.MustExecContext(context.Background(), query, args...)
 }
 
-func (bc *BatchConn) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
+func (bc *BatchConn) GetContext(ctx context.Context, dest any, query string, args ...any) error {
 	if bc.done {
 		return sql.ErrConnDone
 	}
 	return sqlx.GetContext(ctx, bc, dest, query, args...)
 }
 
-func (bc *BatchConn) Get(dest interface{}, query string, args ...interface{}) error {
+func (bc *BatchConn) Get(dest any, query string, args ...any) error {
 	if bc.done {
 		return sql.ErrConnDone
 	}
 	return bc.GetContext(context.Background(), dest, query, args...)
 }
 
-func (bc *BatchConn) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
+func (bc *BatchConn) SelectContext(ctx context.Context, dest any, query string, args ...any) error {
 	if bc.done {
 		return sql.ErrConnDone
 	}
 	return sqlx.SelectContext(ctx, bc, dest, query, args...)
 }
 
-func (bc *BatchConn) Select(dest interface{}, query string, args ...interface{}) error {
+func (bc *BatchConn) Select(dest any, query string, args ...any) error {
 	if bc.done {
 		return sql.ErrConnDone
 	}
 	return bc.SelectContext(context.Background(), dest, query, args...)
 }
 
-func (bc *BatchConn) NamedQueryContext(ctx context.Context, query string, arg interface{}) (*sqlx.Rows, error) {
+func (bc *BatchConn) NamedQueryContext(ctx context.Context, query string, arg any) (*sqlx.Rows, error) {
 	if bc.done {
 		return nil, sql.ErrConnDone
 	}
@@ -282,14 +291,14 @@ func (bc *BatchConn) NamedQueryContext(ctx context.Context, query string, arg in
 	return bc.QueryxContext(ctx, q, args...)
 }
 
-func (bc *BatchConn) NamedQuery(query string, arg interface{}) (*sqlx.Rows, error) {
+func (bc *BatchConn) NamedQuery(query string, arg any) (*sqlx.Rows, error) {
 	if bc.done {
 		return nil, sql.ErrConnDone
 	}
 	return bc.NamedQueryContext(context.Background(), query, arg)
 }
 
-func (bc *BatchConn) NamedExecContext(ctx context.Context, query string, arg interface{}) (sql.Result, error) {
+func (bc *BatchConn) NamedExecContext(ctx context.Context, query string, arg any) (sql.Result, error) {
 	if bc.done {
 		return nil, sql.ErrConnDone
 	}
@@ -300,7 +309,7 @@ func (bc *BatchConn) NamedExecContext(ctx context.Context, query string, arg int
 	return bc.ExecContext(ctx, q, args...)
 }
 
-func (bc *BatchConn) NamedExec(query string, arg interface{}) (sql.Result, error) {
+func (bc *BatchConn) NamedExec(query string, arg any) (sql.Result, error) {
 	if bc.done {
 		return nil, sql.ErrConnDone
 	}
